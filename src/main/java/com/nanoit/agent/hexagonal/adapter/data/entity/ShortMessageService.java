@@ -36,7 +36,7 @@ public class ShortMessageService {
     @Column(nullable = false)
     private String content;
 
-    @ColumnDefault("WAIT")
+    @ColumnDefault("'WAIT'")
     @Column(nullable = false)
     private String status;
 
