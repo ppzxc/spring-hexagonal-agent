@@ -1,5 +1,6 @@
 package com.nanoit.agent.hexagonal.adapter.data.entity;
 
+import com.nanoit.agent.hexagonal.domain.Message;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -16,7 +17,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
 @Table(name = "sms_msg")
-public class ShortMessageService {
+public class ShortMessageService implements Message {
 
     @Id
     @Column(name = "id", nullable = false, length = 20)
@@ -47,4 +48,29 @@ public class ShortMessageService {
     @ColumnDefault("now()")
     @Column(name = "modified_datetime", nullable = false)
     private LocalDateTime modifiedDateTime;
+
+    @Override
+    public String getId() {
+        return this.id;
+    }
+
+    @Override
+    public String getToPhoneNumber() {
+        return this.toPhoneNumber;
+    }
+
+    @Override
+    public String getFromPhoneNumber() {
+        return this.fromPhoneNumber;
+    }
+
+    @Override
+    public String getSubject() {
+        return this.subject;
+    }
+
+    @Override
+    public String getContent() {
+        return this.content;
+    }
 }
