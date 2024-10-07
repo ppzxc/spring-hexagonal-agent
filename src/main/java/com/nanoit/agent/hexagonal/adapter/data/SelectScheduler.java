@@ -36,8 +36,12 @@ public class SelectScheduler {
         log.info("select scheduling");
         List<ShortMessageService> allByStatusIsWaitAndUpdate = shortMessageServiceService.findAllByStatusIsWaitAndUpdate();
         if (allByStatusIsWaitAndUpdate != null && !allByStatusIsWaitAndUpdate.isEmpty()) {
-            allByStatusIsWaitAndUpdate.forEach(sms -> log.info("{}", sms));
+            allByStatusIsWaitAndUpdate.forEach(sms -> {
+                log.info("message id: {}", sms.getId());
+                messageInputPort.send(sms);
+            });
+        } else {
+            log.info("No messages to send.");
         }
-        messageInputPort.send(null);
     }
 }
