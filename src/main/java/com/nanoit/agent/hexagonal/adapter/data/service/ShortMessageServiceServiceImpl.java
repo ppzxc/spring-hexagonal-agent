@@ -20,6 +20,8 @@ public class ShortMessageServiceServiceImpl implements ShortMessageServiceServic
      */
     @Override
     public List<ShortMessageService> findAllByStatusIsWaitAndUpdate() {
+        List<ShortMessageService> waitingMessages = shortMessageServiceRepository.findByStatus("WAIT");
+
         return shortMessageServiceRepository.findAll();
     }
 }
