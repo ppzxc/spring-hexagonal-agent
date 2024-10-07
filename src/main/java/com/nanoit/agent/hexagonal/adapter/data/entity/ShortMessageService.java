@@ -1,9 +1,6 @@
 package com.nanoit.agent.hexagonal.adapter.data.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -26,9 +23,18 @@ public class ShortMessageService {
     @JdbcTypeCode(SqlTypes.VARCHAR)
     private String id;
 
-    /**
-     * 필요한 컬럼을 설계한다.
-     */
+    @Column(nullable = false)
+    private String toPhoneNumber;
+
+    @Column(nullable = false)
+    private String fromPhoneNumber;
+
+    @Column(nullable = false, length = 100)
+    private String subject;
+
+    @Lob
+    @Column(nullable = false)
+    private String content;
 
     @ColumnDefault("now()")
     @Column(name = "created_datetime", nullable = false)
