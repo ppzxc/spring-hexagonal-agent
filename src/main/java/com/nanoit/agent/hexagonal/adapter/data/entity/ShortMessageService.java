@@ -26,9 +26,17 @@ public class ShortMessageService {
     @JdbcTypeCode(SqlTypes.VARCHAR)
     private String id;
 
-    /**
-     * 필요한 컬럼을 설계한다.
-     */
+    @Column(name = "recipient_number", nullable = false, length = 20)
+    private String recipientNumber;
+
+    @Column(name = "sender_number", nullable = false, length= 20)
+    private String senderNumber;
+
+    @Column(name = "subject", length = 90)
+    private String subject;
+
+    @Column(name = "content", nullable = false, length = 200)
+    private String content;
 
     @ColumnDefault("now()")
     @Column(name = "created_datetime", nullable = false)
