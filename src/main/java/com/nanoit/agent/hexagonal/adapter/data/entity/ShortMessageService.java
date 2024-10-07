@@ -36,6 +36,10 @@ public class ShortMessageService {
     @Column(nullable = false)
     private String content;
 
+    @ColumnDefault("WAIT")
+    @Column(nullable = false)
+    private String status;
+
     @ColumnDefault("now()")
     @Column(name = "created_datetime", nullable = false)
     private LocalDateTime createdDateTime;
