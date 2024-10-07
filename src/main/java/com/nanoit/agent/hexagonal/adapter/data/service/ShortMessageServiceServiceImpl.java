@@ -4,6 +4,7 @@ import com.nanoit.agent.hexagonal.adapter.data.entity.ShortMessageService;
 import com.nanoit.agent.hexagonal.adapter.data.repository.ShortMessageServiceRepository;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -20,8 +21,19 @@ public class ShortMessageServiceServiceImpl implements ShortMessageServiceServic
      */
     @Override
     public List<ShortMessageService> findAllByStatusIsWaitAndUpdate() {
+        // 1. 대기 상태인 메시지 조회
         List<ShortMessageService> waitingMessages = shortMessageServiceRepository.findByStatus("WAIT");
 
-        return shortMessageServiceRepository.findAll();
+        // 2. 상태 업데이트
+        for (ShortMessageService message : waitingMessages) {
+            message.setStatus("SENT");
+            message.setModifiedDateTime(LocalDateTime.now());
+        }
+
+        // 3. DB에 값 저장
+        shortMessageServiceRepository.saveAll(waitingMessages);
+
+        // 4. 조회된 데이터 반환
+        return waitingMessages;
     }
 }
