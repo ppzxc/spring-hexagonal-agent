@@ -1,6 +1,7 @@
 package com.nanoit.agent.hexagonal.adapter.data.service;
 
 import com.nanoit.agent.hexagonal.adapter.data.entity.ShortMessageService;
+import com.nanoit.agent.hexagonal.adapter.data.entity.Status;
 import com.nanoit.agent.hexagonal.adapter.data.repository.ShortMessageServiceRepository;
 import org.springframework.stereotype.Service;
 
@@ -26,7 +27,7 @@ public class ShortMessageServiceServiceImpl implements ShortMessageServiceServic
 
         // 2. 상태 업데이트
         for (ShortMessageService message : waitingMessages) {
-            message.setStatus("SENT");
+            message.setStatus(Status.SENT);
             message.setModifiedDateTime(LocalDateTime.now());
         }
 
