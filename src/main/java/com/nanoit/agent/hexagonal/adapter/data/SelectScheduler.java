@@ -38,7 +38,11 @@ public class SelectScheduler {
         if (allByStatusIsWaitAndUpdate != null && !allByStatusIsWaitAndUpdate.isEmpty()) {
             allByStatusIsWaitAndUpdate.forEach(sms -> {
                 log.info("message id: {}", sms.getId());
-                messageInputPort.send(sms);
+                try {
+                    messageInputPort.send(sms);
+                } catch (IllegalArgumentException e) {
+                    log.error("메시지 처리 중 오류 발생: {}", e.getMessage());
+                }
             });
         } else {
             log.info("No messages to send.");
