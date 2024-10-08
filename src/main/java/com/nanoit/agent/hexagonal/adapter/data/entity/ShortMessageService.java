@@ -39,7 +39,7 @@ public class ShortMessageService implements Message {
 
     @Enumerated(EnumType.ORDINAL)
     @Column(nullable = false)
-    private Status status = Status.WAIT;
+    private Status status;
 
     @ColumnDefault("now()")
     @Column(name = "created_datetime", nullable = false)

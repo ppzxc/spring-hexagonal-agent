@@ -8,6 +8,8 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import static com.nanoit.agent.hexagonal.adapter.data.entity.Status.WAIT;
+
 @Service
 public class ShortMessageServiceServiceImpl implements ShortMessageServiceService {
 
@@ -23,7 +25,7 @@ public class ShortMessageServiceServiceImpl implements ShortMessageServiceServic
     @Override
     public List<ShortMessageService> findAllByStatusIsWaitAndUpdate() {
         // 1. 대기 상태인 메시지 조회
-        List<ShortMessageService> waitingMessages = shortMessageServiceRepository.findByStatus("WAIT");
+        List<ShortMessageService> waitingMessages = shortMessageServiceRepository.findByStatus(WAIT);
 
         // 2. 상태 업데이트
         for (ShortMessageService message : waitingMessages) {
