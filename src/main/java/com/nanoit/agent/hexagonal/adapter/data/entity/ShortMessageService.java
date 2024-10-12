@@ -1,9 +1,7 @@
 package com.nanoit.agent.hexagonal.adapter.data.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
+import com.nanoit.agent.hexagonal.domain.MessageStatus;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -22,20 +20,20 @@ import java.time.LocalDateTime;
 public class ShortMessageService {
 
     @Id
-    @Column(name = "id", nullable = false, length = 20)
+    @Column(name = "id", nullable = false)
     @JdbcTypeCode(SqlTypes.VARCHAR)
     private String id;
 
-    @Column(name = "recipient_number", nullable = false, length = 20)
+    @Column(name = "recipient_number", nullable = false)
     private String recipientNumber;
 
-    @Column(name = "sender_number", nullable = false, length= 20)
+    @Column(name = "sender_number", nullable = false)
     private String senderNumber;
 
-    @Column(name = "subject", length = 90)
+    @Column(name = "subject")
     private String subject;
 
-    @Column(name = "content", nullable = false, length = 200)
+    @Column(name = "content", nullable = false)
     private String content;
 
     @ColumnDefault("now()")
@@ -45,4 +43,30 @@ public class ShortMessageService {
     @ColumnDefault("now()")
     @Column(name = "modified_datetime", nullable = false)
     private LocalDateTime modifiedDateTime;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false)
+    private MessageStatus status;
+
+
+    public static ShortMessageService createEmpty() {
+        ShortMessageService sms = new ShortMessageService();
+        sms.setCreatedDateTime(LocalDateTime.now());
+        sms.setModifiedDateTime(LocalDateTime.now());
+        sms.setStatus(MessageStatus.WAIT);
+        return sms;
+    }
+
+    // 모든 필드를 초기화하는 생성자 추가
+    public ShortMessageService(String id, String recipientNumber, String senderNumber, String subject, String content, MessageStatus status) {
+        this.id = id;
+        this.recipientNumber = recipientNumber;
+        this.senderNumber = senderNumber;
+        this.subject = subject;
+        this.content = content;
+        this.status = status;
+        this.createdDateTime = LocalDateTime.now();
+        this.modifiedDateTime = LocalDateTime.now();
+    }
 }
+

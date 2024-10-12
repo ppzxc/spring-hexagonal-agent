@@ -3,6 +3,8 @@ package com.nanoit.agent.hexagonal.adapter.data;
 import com.nanoit.agent.hexagonal.adapter.data.entity.ShortMessageService;
 import com.nanoit.agent.hexagonal.adapter.data.service.ShortMessageServiceService;
 import com.nanoit.agent.hexagonal.application.MessageInputPort;
+import com.nanoit.agent.hexagonal.domain.MessageStatus;
+import com.nanoit.agent.hexagonal.domain.SimpleMessage;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -27,7 +29,7 @@ public class SelectScheduler {
     }
 
     /**
-     * 1초 마다 실행되는 메소드.
+     * 1초마다 실행되는 메소드.
      *
      * 1초마다 대기 상태의 모든 메시지를 조회한 후 대상 데이터를 transport input port의 send 메소드를 통해 데이터를 전달한다.
      */
@@ -36,8 +38,19 @@ public class SelectScheduler {
         log.info("select scheduling");
         List<ShortMessageService> allByStatusIsWaitAndUpdate = shortMessageServiceService.findAllByStatusIsWaitAndUpdate();
         if (allByStatusIsWaitAndUpdate != null && !allByStatusIsWaitAndUpdate.isEmpty()) {
-            allByStatusIsWaitAndUpdate.forEach(sms -> log.info("{}", sms));
+            allByStatusIsWaitAndUpdate.forEach(sms -> {
+                log.info("{}", sms);
+                // ShortMessageService를 SimpleMessage로 변환
+                SimpleMessage message = new SimpleMessage(
+                        sms.getId(),
+                        sms.getRecipientNumber(),
+                        sms.getSenderNumber(),
+                        sms.getSubject(),
+                        sms.getContent(),
+                        sms.getStatus()
+                );
+                messageInputPort.send(message);
+            });
         }
-        messageInputPort.send(null);
     }
 }

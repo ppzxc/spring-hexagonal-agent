@@ -9,7 +9,7 @@ version = "0.0.1-SNAPSHOT"
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(22)
+        languageVersion = JavaLanguageVersion.of(17)
     }
 }
 
@@ -27,7 +27,10 @@ dependencies {
     implementation("org.projectlombok:lombok")
 
     testImplementation("org.springframework.boot:spring-boot-starter-test")
-    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+
+    // Netty 의존성 추가
+    implementation("io.netty:netty-all:4.1.68.Final")
+
 }
 
 tasks.withType<Test> {

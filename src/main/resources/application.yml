@@ -1,4 +1,9 @@
 spring:
+  profiles:
+    active: demo
+  main:
+    web-application-type:  servlet
+
   application:
     name: spring-hexagonal-agent
 

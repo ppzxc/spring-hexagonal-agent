@@ -11,4 +11,7 @@ public interface Message {
     String getSubject();
 
     String getContent();
+    MessageStatus getStatus();
+    void setStatus(MessageStatus status);
 }
+

@@ -1,9 +1,11 @@
 package com.nanoit.agent.hexagonal.application;
 
 import com.nanoit.agent.hexagonal.domain.Message;
+import com.nanoit.agent.hexagonal.domain.MessageStatus;
 import org.springframework.stereotype.Component;
 
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.regex.Pattern;
 
 @Component
@@ -21,19 +23,33 @@ public class MessageUseCase implements MessageInputPort {
      * 비즈니스 로직을 구현하고 유효한 메시지일 경우 transport 영역으로 전달한다.
      * 필요한 경우 persistence port로 업데이트를 진행한다.
      */
+
     @Override
     public void send(Message message) {
-        validateMessage(message);
-        transportOutputPort.send(message);
-        persistenceOutputPort.update(message);
+        validateMessage(message);  // 메시지 유효성 검증
+        transportOutputPort.send(message); // NettyTransportOutputPort로 메시지 전송
+        persistenceOutputPort.update(message); // 메시지 상태 업데이트
 
     }
+    @Override
+    public List<Message> processWaitingMessages() {
+        List<Message> waitingMessages = persistenceOutputPort.findAllByStatusIsWaitAndUpdate();
+        for (Message message : waitingMessages) {
+            // 메시지 처리 로직
+            transportOutputPort.send(message);
+            message.setStatus(MessageStatus.PROCESSING);
+            persistenceOutputPort.update(message);
+        }
+        return waitingMessages;
+    }
+
     private void validateMessage(Message message) {
         validatePhoneNumber(message.getToPhoneNumber(), "Recipient");
         validatePhoneNumber(message.getFromPhoneNumber(),"Sender");
         validateSubject(message.getSubject());
         validateContent(message.getContent());
     }
+
     private void validatePhoneNumber(String phoneNumber, String type) {
       String regex ="^\\d{10,11}$";
       if (!Pattern.matches(regex, phoneNumber)) {
