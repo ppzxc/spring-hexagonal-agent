@@ -3,7 +3,6 @@ package com.nanoit.agent.hexagonal.adapter.data;
 import com.nanoit.agent.hexagonal.adapter.data.entity.ShortMessageService;
 import com.nanoit.agent.hexagonal.adapter.data.service.ShortMessageServiceService;
 import com.nanoit.agent.hexagonal.application.MessageInputPort;
-import com.nanoit.agent.hexagonal.domain.MessageStatus;
 import com.nanoit.agent.hexagonal.domain.SimpleMessage;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.EnableScheduling;

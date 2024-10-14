@@ -12,7 +12,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.nio.charset.StandardCharsets;
-import java.util.concurrent.TimeUnit;
 
 @Component
 public class NettyTransportOutputPort implements TransportOutputPort {
@@ -60,10 +59,12 @@ public class NettyTransportOutputPort implements TransportOutputPort {
                 throw new RuntimeException("Failed to initialize connection", e);
             }
         }
-
+        G// 메시지 전송
         channel.writeAndFlush(message).addListener((ChannelFutureListener) future -> {
             if (!future.isSuccess()) {
                 System.err.println("Failed to send message: " + future.cause());
+            } else {
+                System.out.println("Message sent successfully ");
             }
         });
     }

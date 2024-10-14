@@ -26,8 +26,14 @@ public class MessageUseCase implements MessageInputPort {
 
     @Override
     public void send(Message message) {
-        validateMessage(message);  // 메시지 유효성 검증
-        transportOutputPort.send(message); // NettyTransportOutputPort로 메시지 전송
+        validateMessage(message);// 메시지 유효성 검증
+        try {
+            transportOutputPort.send(message); // NettyTransportOutputPort로 메시지 전송
+            message.setStatus(MessageStatus.SENT); //메시지 전송 성공하면 sent
+        }catch (Exception e) {
+            message.setStatus(MessageStatus.FAILED); // 메시지 전송 실패하면 failed, 예외 메시지를 기록
+            System.err.println("Failed to send message:" + e.getMessage());
+        }
         persistenceOutputPort.update(message); // 메시지 상태 업데이트
 
     }
@@ -35,7 +41,7 @@ public class MessageUseCase implements MessageInputPort {
     public List<Message> processWaitingMessages() {
         List<Message> waitingMessages = persistenceOutputPort.findAllByStatusIsWaitAndUpdate();
         for (Message message : waitingMessages) {
-            // 메시지 처리 로직
+            // 메시지 처리
             transportOutputPort.send(message);
             message.setStatus(MessageStatus.PROCESSING);
             persistenceOutputPort.update(message);

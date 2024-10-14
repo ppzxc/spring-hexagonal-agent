@@ -67,6 +67,22 @@ public class ShortMessageService {
         this.status = status;
         this.createdDateTime = LocalDateTime.now();
         this.modifiedDateTime = LocalDateTime.now();
+
+    }
+
+    // 객체 생성용 static factory method
+    public static ShortMessageService create(String id, String recipientNumber, String senderNumber, String subject, String content, MessageStatus status) {
+        ShortMessageService entity = new ShortMessageService();
+        entity.setId(id);
+        entity.setRecipientNumber(recipientNumber);
+        entity.setSenderNumber(senderNumber);
+        entity.setSubject(subject);
+        entity.setContent(content);
+        entity.setStatus(status);
+        entity.setCreatedDateTime(LocalDateTime.now());
+        entity.setModifiedDateTime(LocalDateTime.now());
+        return entity;
     }
 }
+
 
