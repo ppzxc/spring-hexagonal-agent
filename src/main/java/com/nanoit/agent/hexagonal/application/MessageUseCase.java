@@ -1,5 +1,6 @@
 package com.nanoit.agent.hexagonal.application;
 
+import com.nanoit.agent.hexagonal.adapter.data.entity.ShortMessageService;
 import com.nanoit.agent.hexagonal.domain.Message;
 import org.springframework.stereotype.Component;
 
@@ -26,7 +27,13 @@ public class MessageUseCase implements MessageInputPort {
     @Override
     public void send(Message message) {
         if (isValidMessage(message)) {
-            transportOutputPort.send(message);
+            try {
+                transportOutputPort.send(message);
+            } catch (IllegalArgumentException e) {
+                // message.setResultCode();
+                persistenceOutputPort.update(message);
+                log.error("메시지 처리 중 오류 발생: {}", e.getMessage());
+            }
         }
     }
 
@@ -50,7 +57,6 @@ public class MessageUseCase implements MessageInputPort {
         return true;
     }
 
-    // 전화번호 유효성 검사
     public static boolean isValidNumber(String phoneNumber) {
         return Pattern.matches("^(01[016789]|02|0[3-9][0-9])\\d{3,4}\\d{4}$", phoneNumber);
     }
