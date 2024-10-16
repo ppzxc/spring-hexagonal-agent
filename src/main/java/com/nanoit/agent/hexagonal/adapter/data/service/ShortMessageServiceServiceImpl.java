@@ -4,6 +4,7 @@ import com.nanoit.agent.hexagonal.adapter.data.entity.ShortMessageService;
 import com.nanoit.agent.hexagonal.adapter.data.entity.Status;
 import com.nanoit.agent.hexagonal.adapter.data.repository.ShortMessageServiceRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -23,6 +24,7 @@ public class ShortMessageServiceServiceImpl implements ShortMessageServiceServic
      * 테이블 내 대기중인 전송 메시지 데이터를 조회하고 상태값을 변경한 후 조회된 데이터를 리턴한다.
      */
     @Override
+    @Transactional
     public List<ShortMessageService> findAllByStatusIsWaitAndUpdate() {
         // 1. 대기 상태인 메시지 조회
         List<ShortMessageService> waitingMessages = shortMessageServiceRepository.findByStatus(WAIT);
