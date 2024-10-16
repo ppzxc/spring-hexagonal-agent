@@ -1,8 +1,10 @@
 package com.nanoit.agent.hexagonal.adapter.data;
 
 import com.nanoit.agent.hexagonal.adapter.data.entity.ShortMessageService;
+import com.nanoit.agent.hexagonal.adapter.data.mapper.MessageMapperImpl;
 import com.nanoit.agent.hexagonal.adapter.data.service.ShortMessageServiceService;
 import com.nanoit.agent.hexagonal.application.MessageInputPort;
+import com.nanoit.agent.hexagonal.domain.Message;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -20,10 +22,12 @@ public class SelectScheduler {
 
     private final ShortMessageServiceService shortMessageServiceService;
     private final MessageInputPort messageInputPort;
+    private final MessageMapperImpl messageMapper;
 
-    public SelectScheduler(ShortMessageServiceService shortMessageServiceService, MessageInputPort messageInputPort) {
+    public SelectScheduler(ShortMessageServiceService shortMessageServiceService, MessageInputPort messageInputPort, MessageMapperImpl messageMapper) {
         this.shortMessageServiceService = shortMessageServiceService;
         this.messageInputPort = messageInputPort;
+        this.messageMapper = messageMapper;
     }
 
     /**
@@ -33,19 +37,24 @@ public class SelectScheduler {
      */
     @Scheduled(fixedDelay = 1000L)
     public void select() {
-        log.info("select scheduling");
-        List<ShortMessageService> allByStatusIsWaitAndUpdate = shortMessageServiceService.findAllByStatusIsWaitAndUpdate();
-        if (allByStatusIsWaitAndUpdate != null && !allByStatusIsWaitAndUpdate.isEmpty()) {
-            allByStatusIsWaitAndUpdate.forEach(sms -> {
-                log.info("message id: {}", sms.getId());
-                try {
-                    messageInputPort.send(sms);
-                } catch (IllegalArgumentException e) {
-                    log.error("메시지 처리 중 오류 발생: {}", e.getMessage());
-                }
-            });
-        } else {
+        log.info("SelectScheduler: Scheduling started.");
+
+        List<ShortMessageService> waitingMessages = shortMessageServiceService.findAllByStatusIsWaitAndUpdate();
+
+        if (waitingMessages.isEmpty()) {
             log.info("No messages to send.");
+            return;
         }
+
+        waitingMessages.forEach(sms -> {
+            log.info("Message ID {}: Starting transmission.", sms.getId());
+            try {
+                Message message = messageMapper.toMessage(sms);
+                messageInputPort.send(message);
+                log.info("Message ID {}: Successfully sent.", sms.getId());
+            } catch (IllegalArgumentException e) {
+                log.error("Message ID {}: Error occurred during processing - {}", sms.getId(), e.getMessage());
+            }
+        });
     }
 }
