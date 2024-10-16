@@ -6,9 +6,7 @@ import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
-import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.nio.charset.StandardCharsets;
@@ -16,97 +14,65 @@ import java.nio.charset.StandardCharsets;
 @Component
 public class NettyTransportOutputPort implements TransportOutputPort {
 
-    @Value("${nanoit.server.host:localhost}")
-    private String host;
+    private String host = "localhost"; // 서버 호스트 설정
+    private int port = 8080; // 서버 포트설정
 
-    @Value("${nanoit.server.port:8080}")
-    private int port;
-
-    private final EventLoopGroup group = new NioEventLoopGroup();
+    private final EventLoopGroup group = new NioEventLoopGroup();// 이벤트 그룹 생성
     private Channel channel;
 
+    // 클라이언트 초기화
     public void init() throws InterruptedException {
         Bootstrap b = new Bootstrap();
         b.group(group)
                 .channel(NioSocketChannel.class)
-                .option(ChannelOption.TCP_NODELAY, true)
-                .handler(new ChannelInitializer<SocketChannel>() {
+                .handler(new ChannelInitializer<Channel>() {
                     @Override
-                    public void initChannel(SocketChannel ch) {
-                        ChannelPipeline p = ch.pipeline();
-                        p.addLast(new MessageEncoder());
-                        p.addLast(new MessageHandler());
+                    protected void initChannel(Channel ch) {
+                        ch.pipeline().addLast(new SimpleChannelInboundHandler<ByteBuf>() {
+                            @Override
+                            protected void channelRead0(ChannelHandlerContext ctx, ByteBuf msg) {
+                                System.out.println("Received: " + msg.toString(StandardCharsets.UTF_8)); // 서버로부터 받은 메시지 출력
+                            }
+                        });
                     }
                 });
-
-        this.channel = b.connect(host, port).sync().channel();
+        this.channel = b.connect(host, port).sync().channel(); //서버에 연결
     }
 
-    public void shutdown() {
-        if (channel != null) {
-            channel.close();
-        }
-        group.shutdownGracefully();
-    }
-
+    // 메시지 전송
     @Override
     public void send(Message message) {
         if (channel == null || !channel.isActive()) {
             try {
-                init();
+                init(); // 연결 없거나 비활성화된 경우 초기화
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 throw new RuntimeException("Failed to initialize connection", e);
             }
         }
-        G// 메시지 전송
-        channel.writeAndFlush(message).addListener((ChannelFutureListener) future -> {
+        String encodedMessage = String.format("%s|%s|%s|%s",
+                message.getToPhoneNumber(),
+                message.getFromPhoneNumber(),
+                message.getSubject(),
+                message.getContent()); // 메시지 인코딩
+
+        ByteBuf buf = channel.alloc().buffer(); // ByteBuf 생성 (전송 준비)
+        buf.writeBytes(encodedMessage.getBytes(StandardCharsets.UTF_8));
+        channel.writeAndFlush(buf).addListener((ChannelFutureListener) future -> {
+
             if (!future.isSuccess()) {
-                System.err.println("Failed to send message: " + future.cause());
+                System.err.println("Failed to send message: " + future.cause()); // 전송 실패 시
             } else {
-                System.out.println("Message sent successfully ");
+                System.out.println("Message sent successfully"); // 전송 성공 시
             }
         });
     }
 
-    static class MessageEncoder extends ChannelOutboundHandlerAdapter {
-        @Override
-        public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) {
-            if (msg instanceof Message) {
-                Message message = (Message) msg;
-                ByteBuf buf = ctx.alloc().buffer();
-                String encodedMessage = String.format("%s|%s|%s|%s",
-                        message.getToPhoneNumber(),
-                        message.getFromPhoneNumber(),
-                        message.getSubject(),
-                        message.getContent());
-                buf.writeBytes(encodedMessage.getBytes(StandardCharsets.UTF_8));
-                ctx.write(buf, promise);
-            } else {
-                ctx.write(msg, promise);
-            }
+    // 클라이언트 종료
+    public void shutdown() {
+        if (channel != null) {
+            channel.close(); // 채널 닫기
         }
-    }
-
-    static class MessageHandler extends ChannelInboundHandlerAdapter {
-        @Override
-        public void channelRead(ChannelHandlerContext ctx, Object msg) {
-            ByteBuf in = (ByteBuf) msg;
-            try {
-                StringBuilder response = new StringBuilder();
-                while (in.isReadable()) {
-                    response.append((char) in.readByte());
-                }
-                System.out.println("Server response: " + response);
-            } finally {
-                in.release();
-            }
-        }
-
-        @Override
-        public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-            cause.printStackTrace();
-            ctx.close();
-        }
+        group.shutdownGracefully(); // 이벤트 루프 종료
     }
 }
