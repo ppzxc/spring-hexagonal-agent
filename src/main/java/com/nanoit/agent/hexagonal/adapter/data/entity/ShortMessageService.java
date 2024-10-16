@@ -17,7 +17,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
 @Table(name = "sms_msg")
-public class ShortMessageService implements Message {
+public class ShortMessageService {
 
     @Id
     @Column(name = "id", nullable = false, length = 20)
@@ -41,6 +41,8 @@ public class ShortMessageService implements Message {
     @Column(nullable = false)
     private Status status;
 
+    private String resultCode;
+
     @ColumnDefault("now()")
     @Column(name = "created_datetime", nullable = false)
     private LocalDateTime createdDateTime;
@@ -48,29 +50,4 @@ public class ShortMessageService implements Message {
     @ColumnDefault("now()")
     @Column(name = "modified_datetime", nullable = false)
     private LocalDateTime modifiedDateTime;
-
-    @Override
-    public String getId() {
-        return this.id;
-    }
-
-    @Override
-    public String getToPhoneNumber() {
-        return this.toPhoneNumber;
-    }
-
-    @Override
-    public String getFromPhoneNumber() {
-        return this.fromPhoneNumber;
-    }
-
-    @Override
-    public String getSubject() {
-        return this.subject;
-    }
-
-    @Override
-    public String getContent() {
-        return this.content;
-    }
 }
