@@ -1,6 +1,5 @@
 package com.nanoit.agent;
 import com.nanoit.agent.hexagonal.adapter.data.H2PersistenceOutputPort;
-import com.nanoit.agent.hexagonal.adapter.transport.NettyTransportOutputPort;
 import com.nanoit.agent.hexagonal.domain.Message;
 import com.nanoit.agent.hexagonal.domain.MessageStatus;
 import com.nanoit.agent.hexagonal.domain.SimpleMessage;

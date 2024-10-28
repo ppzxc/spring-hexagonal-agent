@@ -29,9 +29,8 @@ dependencies {
     testImplementation("org.springframework.boot:spring-boot-starter-test")
 
     // Netty 의존성 추가
-    implementation("io.netty:netty-all:4.1.71.Final")
- //   implementation("org.slf4j:slf4j-api:1.7.32")
-  //  implementation("ch.qos.logback:logback-classic:1.5.6")
+    implementation("io.netty:netty-all:4.1.114.Final")
+
     
 }
 

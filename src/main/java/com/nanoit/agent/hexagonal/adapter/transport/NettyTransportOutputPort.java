@@ -7,72 +7,112 @@ import io.netty.buffer.ByteBuf;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioSocketChannel;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.DisposableBean;
+import lombok.extern.slf4j.Slf4j;
 
 import java.nio.charset.StandardCharsets;
 
+@Slf4j
 @Component
-public class NettyTransportOutputPort implements TransportOutputPort {
+public class NettyTransportOutputPort implements TransportOutputPort, DisposableBean {
 
-    private String host = "localhost"; // 서버 호스트 설정
-    private int port = 8080; // 서버 포트설정
-
-    private final EventLoopGroup group = new NioEventLoopGroup();// 이벤트 그룹 생성
+    private final String host = "localhost";
+    private final int port = 8080;
+    private final EventLoopGroup group = new NioEventLoopGroup();
     private Channel channel;
 
-    // 클라이언트 초기화
-    public void init() throws InterruptedException {
-        Bootstrap b = new Bootstrap();
-        b.group(group)
-                .channel(NioSocketChannel.class)
-                .handler(new ChannelInitializer<Channel>() {
-                    @Override
-                    protected void initChannel(Channel ch) {
-                        ch.pipeline().addLast(new SimpleChannelInboundHandler<ByteBuf>() {
-                            @Override
-                            protected void channelRead0(ChannelHandlerContext ctx, ByteBuf msg) {
-                                System.out.println("Received: " + msg.toString(StandardCharsets.UTF_8)); // 서버로부터 받은 메시지 출력
-                            }
-                        });
-                    }
-                });
-        this.channel = b.connect(host, port).sync().channel(); //서버에 연결
+    @Override
+    public void init() {
+        try {
+            Bootstrap b = new Bootstrap();
+            b.group(group)
+                    .channel(NioSocketChannel.class)
+                    .handler(new ChannelInitializer<Channel>() {
+                        @Override
+                        protected void initChannel(Channel ch) {
+                            ch.pipeline().addLast(new SimpleChannelInboundHandler<ByteBuf>() {
+                                @Override
+                                protected void channelRead0(ChannelHandlerContext ctx, ByteBuf msg) {
+                                    String receivedMessage = msg.toString(StandardCharsets.UTF_8);
+                                    log.info("Received: {}", receivedMessage);
+                                }
+                            });
+                        }
+                    });
+            this.channel = b.connect(host, port).sync().channel();
+            log.info("Successfully connected to {}:{}", host, port);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("Failed to initialize connection", e);
+        }
     }
 
-    // 메시지 전송
+    @Override
+    public void login() {
+        send("LOGIN", "username|password"); // 실제 로그인 정보로 대체 필요
+    }
+
     @Override
     public void send(Message message) {
         if (channel == null || !channel.isActive()) {
-            try {
-                init(); // 연결 없거나 비활성화된 경우 초기화
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                throw new RuntimeException("Failed to initialize connection", e);
-            }
+            init();
         }
-        String encodedMessage = String.format("%s|%s|%s|%s",
+
+        String encodedMessage = String.format("SEND|%s|%s|%s|%s",
                 message.getToPhoneNumber(),
                 message.getFromPhoneNumber(),
                 message.getSubject(),
-                message.getContent()); // 메시지 인코딩
+                message.getContent());
 
-        ByteBuf buf = channel.alloc().buffer(); // ByteBuf 생성 (전송 준비)
+        ByteBuf buf = channel.alloc().buffer();
         buf.writeBytes(encodedMessage.getBytes(StandardCharsets.UTF_8));
-        channel.writeAndFlush(buf).addListener((ChannelFutureListener) future -> {
 
+        channel.writeAndFlush(buf).addListener((ChannelFutureListener) future -> {
             if (!future.isSuccess()) {
-                System.err.println("Failed to send message: " + future.cause()); // 전송 실패 시
+                log.error("Failed to send message: {}", future.cause().getMessage());
+                throw new RuntimeException("Failed to send message", future.cause());
             } else {
-                System.out.println("Message sent successfully"); // 전송 성공 시
+                log.info("Message sent successfully: {}", message.getId());
             }
         });
     }
 
-    // 클라이언트 종료
-    public void shutdown() {
-        if (channel != null) {
-            channel.close(); // 채널 닫기
+    @Override
+    @Scheduled(fixedRate = 60000) // 60초마다 실행
+    public void alive() {
+        try {
+            send("ALIVE", "");
+            log.info("Alive signal sent successfully");
+        } catch (Exception e) {
+            log.error("Failed to send alive signal: {}", e.getMessage());
         }
-        group.shutdownGracefully(); // 이벤트 루프 종료
+    }
+
+    private void send(String messageType, String payload) {
+        if (channel == null || !channel.isActive()) {
+            init();
+        }
+        String encodedMessage = String.format("%s|%s", messageType, payload);
+        ByteBuf buf = channel.alloc().buffer();
+        buf.writeBytes(encodedMessage.getBytes(StandardCharsets.UTF_8));
+
+        channel.writeAndFlush(buf).addListener((ChannelFutureListener) future -> {
+            if (!future.isSuccess()) {
+                log.error("Failed to send {}: {}", messageType, future.cause().getMessage());
+            } else {
+                log.info("{} sent successfully", messageType);
+            }
+        });
+    }
+
+    @Override
+    public void destroy() {
+        if (channel != null) {
+            channel.close();
+        }
+        group.shutdownGracefully();
+        log.info("Netty resources released");
     }
 }

@@ -1,7 +1,9 @@
 package com.nanoit.agent.hexagonal.adapter.data.service;
 
 import com.nanoit.agent.hexagonal.adapter.data.entity.ShortMessageService;
+import com.nanoit.agent.hexagonal.adapter.data.mapper.MessageMapper;
 import com.nanoit.agent.hexagonal.adapter.data.repository.ShortMessageServiceRepository;
+import com.nanoit.agent.hexagonal.application.MessageInputPort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.nanoit.agent.hexagonal.domain.MessageStatus;
@@ -12,11 +14,29 @@ import java.util.List;
 public class ShortMessageServiceServiceImpl implements ShortMessageServiceService {
 
     private final ShortMessageServiceRepository shortMessageServiceRepository;
+    private final MessageInputPort messageInputPort;
+    private final MessageMapper messageMapper;
 
-    public ShortMessageServiceServiceImpl(ShortMessageServiceRepository shortMessageServiceRepository) {
+    public ShortMessageServiceServiceImpl(
+            ShortMessageServiceRepository shortMessageServiceRepository,
+            MessageInputPort messageInputPort,
+            MessageMapper messageMapper) {
         this.shortMessageServiceRepository = shortMessageServiceRepository;
+        this.messageInputPort = messageInputPort;
+        this.messageMapper = messageMapper;
     }
-
+    // 메시지 전송 메서드 추가
+    public void sendMessage(MessageDTO dto) {
+        Message message = new SimpleMessage(
+                dto.getId(),
+                dto.getToPhone(),
+                dto.getFromPhone(),
+                dto.getSubject(),
+                dto.getContent(),
+                MessageStatus.WAIT
+        );
+        messageInputPort.send(message);
+    }
     /**
      * 테이블 내 대기중인 전송 메시지 데이터를 조회하고 상태값을 변경한 후 조회된 데이터를 리턴한다.
      */

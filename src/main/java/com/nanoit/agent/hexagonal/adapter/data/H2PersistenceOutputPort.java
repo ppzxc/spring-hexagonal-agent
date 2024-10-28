@@ -34,15 +34,6 @@ public class H2PersistenceOutputPort implements PersistenceOutputPort {
         repository.save(entity);
     }
 
-    @Override
-    @Transactional
-    public void save(Message message) {
-        ShortMessageService entity = ShortMessageService.createEmpty();
-        updateEntityFromMessage(entity, message);
-        entity.setCreatedDateTime(LocalDateTime.now());
-        entity.setModifiedDateTime(LocalDateTime.now());
-        repository.save(entity);
-    }
 
     @Override
     public Message findById(String id) {
@@ -59,6 +50,17 @@ public class H2PersistenceOutputPort implements PersistenceOutputPort {
                 .map(this::convertToMessage)
                 .collect(Collectors.toList());
     }
+
+    @Override
+    @Transactional
+    public void save(Message message) {
+        ShortMessageService entity = ShortMessageService.createEmpty();
+        updateEntityFromMessage(entity, message);
+        entity.setCreatedDateTime(LocalDateTime.now());
+        entity.setModifiedDateTime(LocalDateTime.now());
+        repository.save(entity);
+    }
+
 
     private void updateEntityFromMessage(ShortMessageService entity, Message message) {
         entity.setId(message.getId());
