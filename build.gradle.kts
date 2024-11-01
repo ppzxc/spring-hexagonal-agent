@@ -30,6 +30,10 @@ dependencies {
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
     implementation("io.netty:netty-all:4.1.24.Final")
+    implementation("io.github.ppzxc:crypto:0.0.42")
+//    implementation("org.bouncycastle:bcprov-jdk15on:1.70")
+    implementation ("org.bouncycastle:bcprov-jdk18on:1.79")
+
 }
 
 tasks.withType<Test> {

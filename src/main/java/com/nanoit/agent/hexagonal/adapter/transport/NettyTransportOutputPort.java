@@ -2,6 +2,7 @@ package com.nanoit.agent.hexagonal.adapter.transport;
 
 import com.nanoit.agent.hexagonal.application.TransportOutputPort;
 import com.nanoit.agent.hexagonal.domain.Message;
+import io.github.ppzxc.crypto.Crypto;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
@@ -12,22 +13,63 @@ import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
 import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
 import jakarta.annotation.PostConstruct;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponents;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import java.nio.charset.StandardCharsets;
 
 @Slf4j
 @Component
 public class NettyTransportOutputPort implements TransportOutputPort {
-    // private NettyClient nettyClient;
+    private final Crypto crypto;
     private EventLoopGroup group;
     private Channel channel;
 
+    public NettyTransportOutputPort(Crypto crypto) {
+        this.crypto = crypto;
+    }
+
     // 1. Netty 애플리케이션 초기화
+    @SneakyThrows
     @PostConstruct
     void init() {
+//        http://dist.funsms.kr/
+//        testagent1
+//        YsbehiNUmc4FLDM5
+//        FqWvV9xzP5wJ4houY76tek1dknrj1
+
+
         System.out.println("init");
+        // GET http://localhost:9990?username=test1&password={ENCRYPTED PW}
+        UriComponents uriComponents = UriComponentsBuilder.fromUriString("http://dist.funsms.kr/")
+                .queryParam("id", "testagent1")
+                .queryParam("password", crypto.encryptToString("YsbehiNUmc4FLDM5"))
+                .build();
+
+        // URI 인코딩 필수
+        // URI 추가적으로 찾아보시면 됩니다.
+
+        log.info("{}", uriComponents.encode());
+        log.info("{}", uriComponents.toUriString());
+        RestTemplate restTemplate = new RestTemplate();
+        ResponseEntity<String> result = restTemplate.getForEntity(uriComponents.encode().toUri(), String.class);
+        if (result.getStatusCode() != HttpStatus.OK) {
+            log.error("LOGIN FAILED");
+            System.exit(-1);
+        } else {
+            log.info("{}", result.getBody());
+        }
+
+        //
+        // Byte Stream
+        //
+
         group = new NioEventLoopGroup(); // 비동기 이벤트 루프 그룹 설정
         try {
             Bootstrap bootstrap = new Bootstrap(); // 애플리케이션 부트스트랩(초기화) 객체 생성
