@@ -80,7 +80,8 @@ public class NettyTransportOutputPort implements TransportOutputPort {
                         protected void initChannel(Channel ch) {
                             ChannelPipeline pipeline = ch.pipeline();
                             pipeline.addLast(new LoggingHandler(LogLevel.INFO));
-                            pipeline.addLast(new LengthFieldBasedFrameDecoder(1024, 0, 4, 0, 4));
+
+                            pipeline.addLast(new LengthFieldDecoder(10000000, 10, 10, 0, 0));
                             pipeline.addLast(new ByteArrayToMessageCodec());
                         }
                     });
