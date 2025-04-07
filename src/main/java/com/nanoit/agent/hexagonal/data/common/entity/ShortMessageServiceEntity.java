@@ -1,4 +1,4 @@
-package com.nanoit.agent.hexagonal.adapter.data.entity;
+package com.nanoit.agent.hexagonal.data.common.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -19,16 +19,27 @@ import java.time.LocalDateTime;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
 @Table(name = "sms_msg")
-public class ShortMessageService {
+public class ShortMessageServiceEntity {
 
     @Id
     @Column(name = "id", nullable = false, length = 20)
     @JdbcTypeCode(SqlTypes.VARCHAR)
     private String id;
 
-    /**
-     * 필요한 컬럼을 설계한다.
-     */
+    @Column(name = "receive_number", nullable = false, length = 20)
+    private String receiveNumber;
+
+    @Column(name = "callback_number", nullable = false, length = 20)
+    private String callbackNumber;
+
+    @Column(name = "message", nullable = false, length = 20)
+    private String message;
+
+    @Column(name = "to", nullable = false, length = 20)
+    private String to;
+
+    @Column(name = "status", nullable = false, length = 8)
+    private String status;
 
     @ColumnDefault("now()")
     @Column(name = "created_datetime", nullable = false)

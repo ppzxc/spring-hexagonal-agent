@@ -1,3 +1,22 @@
+# 데이터 흐름
+
+1. [SelectSchedulerInputAdapter.java](src/main/java/com/nanoit/agent/hexagonal/data/SelectSchedulerInputAdapter.java)
+2. [MessageUseCase.java](src/main/java/com/nanoit/agent/application/MessageUseCase.java)
+3. [TransportOutputPort.java](src/main/java/com/nanoit/agent/application/TransportOutputPort.java)
+
+- [ToKtApiTransportOutputPort.java](src/main/java/com/nanoit/agent/hexagonal/transport/ToKtApiTransportOutputPort.java)
+- [ToNanoitApiTransportOutputPort.java](src/main/java/com/nanoit/agent/hexagonal/transport/ToNanoitApiTransportOutputPort.java)
+
+5. [H2PersistenceOutputPort.java](src/main/java/com/nanoit/agent/hexagonal/data/H2PersistenceOutputPort.java)
+
+# adapter
+
+- 데이터 시작점
+
+# port
+
+- 데이터 흐름
+
 # spring hexagonal agent
 
 - spring hexagonal architecture 기반 agent 교육 프로젝트
